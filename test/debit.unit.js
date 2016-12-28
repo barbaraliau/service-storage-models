@@ -1,6 +1,5 @@
 'use strict';
 
-// const storj = require('storj-lib');
 const expect = require('chai').expect;
 const mongoose = require('mongoose');
 
@@ -125,12 +124,10 @@ describe('Storage/models/Debit', function() {
       });
 
       newDebit.save(function(err, debit) {
-        console.log('debit', debit);
         expect(err).to.be.an.instanceOf(Error);
         done();
       });
     });
-
 
   });
 });
