@@ -44,9 +44,9 @@ describe('Storage/models/Frame', function() {
 
     it('should create a frame with default props', function(done) {
       User.create('user@domain.tld', sha256('password'), function(err, user) {
+        if (err) return done(err);
         Frame.create(user, function(err, frame) {
-          expect(err).to.not.be.an.instanceOf(Error);
-          expect(frame.created).to.be.an.instanceOf(Date);
+          if (err) return done(err);
           expect(frame.user).to.be.a('string');
           expect(frame.locked).to.be.false;
           expect(frame.size).to.equal(0);
@@ -54,7 +54,7 @@ describe('Storage/models/Frame', function() {
 
           // cleanup
           User.findOneAndRemove({ _id: user._id }, function(err) {
-            expect(err).to.not.be.an.instanceOf(Error);
+            if (err) return done(err);
             done();
           });
         });
@@ -67,10 +67,10 @@ describe('Storage/models/Frame', function() {
 
     it('should set frame.lock to true', function(done) {
       Frame.create({}, function(err, frame) {
-        expect(err).to.not.be.an.instanceOf(Error);
+        if (err) return done(err);
         expect(frame.locked).to.be.false;
         frame.lock(function(err, frame) {
-          expect(err).to.not.be.an.instanceOf(Error);
+          if (err) return done(err);
           expect(frame.locked).to.be.true;
           done();
         });
@@ -83,13 +83,13 @@ describe('Storage/models/Frame', function() {
 
     it('should set frame.lock to false', function(done) {
       Frame.create({}, function(err, frame) {
-        expect(err).to.not.be.an.instanceOf(Error);
+        if (err) return done(err);
         expect(frame.locked).to.be.false;
         frame.lock(function(err, frame) {
-          expect(err).to.not.be.an.instanceOf(Error);
+          if (err) return done(err);
           expect(frame.locked).to.be.true;
           frame.unlock(function(err, frame) {
-            expect(err).to.not.be.an.instanceOf(Error);
+            if (err) return done(err);
             expect(frame.locked).to.be.false;
             done();
           });
