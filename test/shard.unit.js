@@ -38,7 +38,9 @@ describe('Storage/models/Shard', function() {
         hash: 'fjla93fs9-23892-2sdl@#ds-932049203'
       };
       Shard.create(item, function(err, shard) {
-        expect(err).to.not.be.an.instanceOf(Error);
+        if (err) {
+          return done(err);
+        }
         expect(shard.hash).to.equal(item.hash);
         done();
       });
@@ -54,7 +56,9 @@ describe('Storage/models/Shard', function() {
           meta: {}
         };
         Shard.create(item, function(err, shard) {
-          expect(err).to.not.be.an.instanceOf(Error);
+          if (err) {
+            return done(err);
+          }
           expect(shard.contracts).to.be.an('object');
           expect(_.isEqual(item.contracts, shard.contracts)).to.be.true;
           done();
@@ -71,7 +75,9 @@ describe('Storage/models/Shard', function() {
           meta: {}
         };
         Shard.create(item, function(err, shard) {
-          expect(err).to.not.be.an.instanceOf(Error);
+          if (err) {
+            return done(err);
+          }
           expect(shard.trees).to.be.an('object');
           var i = 0;
           _.forEach(shard.trees, (tree, nodeID) => {
@@ -94,7 +100,9 @@ describe('Storage/models/Shard', function() {
           meta: {}
         };
         Shard.create(item, function(err, shard) {
-          expect(err).to.not.be.an.instanceOf(Error);
+          if (err) {
+            return done(err);
+          }
           expect(shard.challenges).to.be.an('object');
           expect(_.isEqual(item.challenges, shard.challenges)).to.be.true;
           done();
@@ -111,7 +119,9 @@ describe('Storage/models/Shard', function() {
           meta: { 0: 'meta1', 1: 'meta2' }
         };
         Shard.create(item, function(err, shard) {
-          expect(err).to.not.be.an.instanceOf(Error);
+          if (err) {
+            return done(err);
+          }
           expect(shard.meta).to.be.an('object');
           expect(_.isEqual(item.meta, shard.meta)).to.be.true;
           done();
