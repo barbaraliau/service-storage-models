@@ -69,6 +69,16 @@ describe('Storage/models/User', function() {
       });
     });
 
+    it('should support modern TLDs', function(done) {
+      User.create(
+        'user@domain.lawyer',
+        sha256('password'),
+        function(err) {
+          expect(err).to.not.be.instanceOf(Error);
+          done();
+      });
+    });
+
   });
 
   /* jshint ignore: start */

@@ -1,6 +1,6 @@
 'use strict';
 
-/*jshint expr: true*/
+/* jshint expr: true, maxlen: 100 */
 
 const expect = require('chai').expect;
 const mongoose = require('mongoose');
@@ -87,7 +87,7 @@ describe('Storage/models/Shard', function() {
             i++;
           });
           done();
-        });
+      });
     });
 
     it('should create a shard record with modified challenges object',
@@ -127,6 +127,8 @@ describe('Storage/models/Shard', function() {
           done();
         });
       });
+
+    });
 
   });
 
