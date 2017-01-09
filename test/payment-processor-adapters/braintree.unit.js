@@ -17,11 +17,13 @@ function() {
       expect(braintreeAdapter.add).to.be.a('function');
       braintreeAdapter
         .add()
-        .then(function success() {
-          // brain tree not yet implemented
+        .then(function success(result) {
+          expect(result.status).to.equal('success');
           done();
-        }, function error() {
-          done();
+        }, function error(err) {
+          if (err) {
+            return done(err);
+          }
         });
     });
 
