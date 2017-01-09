@@ -70,14 +70,24 @@ describe('Storage/models/User', function() {
     });
 
     it('should support modern TLDs', function(done) {
-      User.create(
-        'user@domain.lawyer',
-        sha256('password'),
-        function(err) {
-          expect(err).to.not.be.instanceOf(Error);
-          done();
+      User.create('user@domain.lawyer', sha256('password'), function(err) {
+        if (err) {
+          return done(err);
+        }
+        done();
       });
     });
+
+    it('should create user account with virtuals', function(done) {
+      User.create('test@test.com', sha256('pass'), function(err, user) {
+        if (err) {
+          return done(err);
+        }
+        expect(user.defaultPaymentProcessor).to.be.null;
+        expect(user.email).to.equal(user.id);
+        done();
+      })
+    })
 
   });
 
