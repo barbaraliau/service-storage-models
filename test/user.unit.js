@@ -318,8 +318,20 @@ describe('Storage/models/User', function() {
   });
 
   describe('#addPaymentProcessor', function() {
+    // NB: The application uses Stripe.js to generate a token based on the CC
+    // info. Stripe API does not have a way to gen a token, but does offer an
+    // alternative of sending in a dictionary of CC info instead
+    // https://stripe.com/docs/api/node#create_customer
 
     let user;
+    const name = 'stripe';
+    const d = new Date();
+    const stripeInfo = {
+      object: 'card',
+      exp_month: d.getMonth() + 1,
+      exp_year: d.getFullYear(),
+      number: 4242424242424242
+    };
 
     before(function(done) {
       User.create('user@paymentprocessor.tld', sha256('pass'), function(err,
@@ -332,21 +344,7 @@ describe('Storage/models/User', function() {
       });
     })
 
-    // create token with stripe.card.createToken()
-
     it('should register new processor if none exists', function(done) {
-      // NB: The application uses Stripe.js to generate a token based on the CC
-      // info. Stripe API does not have a way to gen a token, but does offer an
-      // alternative of sending in a dictionary of CC info instead
-      // https://stripe.com/docs/api/node#create_customer
-      const name = 'stripe'
-      const d = new Date();
-      const stripeInfo = {
-        object: 'card',
-        exp_month: d.getMonth() + 1,
-        exp_year: d.getFullYear(),
-        number: 4242424242424242
-      };
       user
         .addPaymentProcessor(name, stripeInfo)
         .then((result) => {
@@ -364,7 +362,7 @@ describe('Storage/models/User', function() {
     });
 
     it('should update existing processor if one exists', function(done) {
-      done();
+      done()
     });
 
   });
