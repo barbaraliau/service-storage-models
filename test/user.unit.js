@@ -6,6 +6,7 @@ const expect = require('chai').expect;
 const mongoose = require('mongoose');
 const sinon = require('sinon');
 const ms = require('ms');
+const Stripe = require('./../lib/vendor/stripe');
 
 require('mongoose-types').loadTypes(mongoose);
 
@@ -312,6 +313,58 @@ describe('Storage/models/User', function() {
         expect(err).to.be.instanceOf(errors.NotAuthorizedError);
         done();
       });
+    });
+
+  });
+
+  describe('#addPaymentProcessor', function() {
+
+    let user;
+
+    before(function(done) {
+      User.create('user@paymentprocessor.tld', sha256('pass'), function(err,
+      newUser) {
+        if (err) {
+          return done(err);
+        }
+        user = newUser;
+        done();
+      });
+    })
+
+    // create token with stripe.card.createToken()
+
+    it('should register new processor if none exists', function(done) {
+      // NB: The application uses Stripe.js to generate a token based on the CC
+      // info. Stripe API does not have a way to gen a token, but does offer an
+      // alternative of sending in a dictionary of CC info instead
+      // https://stripe.com/docs/api/node#create_customer
+      const name = 'stripe'
+      const d = new Date();
+      const stripeInfo = {
+        object: 'card',
+        exp_month: d.getMonth() + 1,
+        exp_year: d.getFullYear(),
+        number: 4242424242424242
+      };
+      user
+        .addPaymentProcessor(name, stripeInfo)
+        .then((result) => {
+          expect(result.name).to.equal(name);
+          expect(result.rawData).to.be.an('array');
+          expect(result.default).to.be.true;
+          expect(result.rawData[0].billingDate).to.equal(d.getDate());
+          done();
+        })
+        .catch((err) => {
+          if (err) {
+            return done(err);
+          }
+        })
+    });
+
+    it('should update existing processor if one exists', function(done) {
+      done();
     });
 
   });
