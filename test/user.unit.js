@@ -11,8 +11,10 @@ const Stripe = require('./../lib/vendor/stripe');
 require('mongoose-types').loadTypes(mongoose);
 
 const UserSchema = require('../lib/models/user');
+const PaymentProcessorSchema = require('../lib/models/payment-processor');
 
 var User;
+var PaymentProcessor;
 var connection;
 
 before(function(done) {
@@ -20,6 +22,7 @@ before(function(done) {
     'mongodb://127.0.0.1:27017/__storj-bridge-test',
     function() {
       User = UserSchema(connection);
+      PaymentProcessor = PaymentProcessorSchema(connection);
       done();
     }
   );
@@ -27,7 +30,9 @@ before(function(done) {
 
 after(function(done) {
   User.remove({}, function() {
-    connection.close(done);
+    PaymentProcessor.remove({}, function() {
+      connection.close(done);
+    });
   });
 });
 
@@ -317,21 +322,12 @@ describe('Storage/models/User', function() {
 
   });
 
-  describe('#addPaymentProcessor', function() {
-    // NB: The application uses Stripe.js to generate a token based on the CC
-    // info. Stripe API does not have a way to gen a token, but does offer an
-    // alternative of sending in a dictionary of CC info instead
-    // https://stripe.com/docs/api/node#create_customer
+  describe('PaymentProcessors', function() {
 
     let user;
+    let stripeToken;
     const name = 'stripe';
     const d = new Date();
-    const stripeInfo = {
-      object: 'card',
-      exp_month: d.getMonth() + 1,
-      exp_year: d.getFullYear(),
-      number: 4242424242424242
-    };
 
     before(function(done) {
       User.create('user@paymentprocessor.tld', sha256('pass'), function(err,
@@ -340,29 +336,72 @@ describe('Storage/models/User', function() {
           return done(err);
         }
         user = newUser;
-        done();
-      });
-    })
 
-    it('should register new processor if none exists', function(done) {
-      user
-        .addPaymentProcessor(name, stripeInfo)
-        .then((result) => {
-          expect(result.name).to.equal(name);
-          expect(result.rawData).to.be.an('array');
-          expect(result.default).to.be.true;
-          expect(result.rawData[0].billingDate).to.equal(d.getDate());
-          done();
-        })
-        .catch((err) => {
+        // Stub out test token for Stripe stuff
+        const cardInfo = {
+          exp_month: d.getMonth() + 1,
+          exp_year: d.getFullYear(),
+          number: 4242424242424242
+        };
+        Stripe.tokens.create({ card: cardInfo }, function(err, token) {
           if (err) {
             return done(err);
           }
-        })
+          stripeToken = token.id;
+          done();
+        });
+      });
+    })
+
+    describe('#addPaymentProcessor', function() {
+
+      it('should register new processor if none exists', function(done) {
+        user
+          .addPaymentProcessor(name, stripeToken)
+          .then((result) => {
+            expect(result.name).to.equal(name);
+            expect(result.rawData).to.be.an('array');
+            expect(result.default).to.be.true;
+            expect(result.rawData[0].billingDate).to.equal(d.getDate());
+            done();
+          })
+          .catch((err) => {
+            if (err) {
+              return done(err);
+            }
+          })
+      });
+
+      it('should update existing processor if one exists', function(done) {
+        user
+          .addPaymentProcessor(name, stripeToken)
+          .then((result) => {
+            console.log('result', result);
+            done();
+          })
+          .catch((err) => {
+            if (err) {
+              return done(err);
+            }
+          })
+      });
+
     });
 
-    it('should update existing processor if one exists', function(done) {
-      done()
+    describe('#getPaymentProcessor', function() {
+
+      it('should return payment processor if it exists', function(done) {
+        const processor = user.getPaymentProcessor(name);
+        expect(processor.name).to.equal(name);
+        done();
+      });
+
+      it('should return ! if payment processor does not exist', function(done) {
+        const processor = user.getPaymentProcessor('braintree');
+        expect(processor).to.be.undefined;
+        done();
+      });
+
     });
 
   });
