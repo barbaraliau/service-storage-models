@@ -194,4 +194,42 @@ describe('Storage/models/payment-processor-adapters/stripeAdapter', function() {
     });
   });
 
+  describe('#cancel', function() {
+
+    it('should cancel a stripe subscription', function(done) {
+      Stripe.subscriptions.list({ limit: 1 }, function(err, subscriptions) {
+        const subscriptionId = subscriptions.data[0].id;
+        adapter
+          .cancel(subscriptionId)
+          .then((result) => {
+            expect(result.id).to.equal(subscriptionId);
+            expect(result.status).to.equal('canceled');
+            done();
+          });
+      });
+    });
+
+    it('should fail with invalid subscription id', function(done) {
+      const subscriptionId = 'blah-blah-blah_id';
+      adapter
+        .cancel(subscriptionId)
+        .catch((err) => {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message)
+            .to.equal(`No such subscription: ${subscriptionId}`);
+          done();
+        });
+    });
+
+    it('should fail with null subscription id', function(done) {
+      const subscriptionId = null;
+      adapter
+        .cancel(subscriptionId)
+        .catch((err) => {
+          expect(err).to.be.an.instanceOf(Error);
+          done();
+        });
+    })
+
+  });
 });
