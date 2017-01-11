@@ -82,9 +82,7 @@ describe('Storage/models/payment-processor-adapters/stripeAdapter', function() {
   describe('#serializeData', function() {
 
     it('should serialize rawData', function(done) {
-      console.log('stripe', stripeProcessor)
       const rawData = stripeProcessor.rawData[0];
-      console.log('adapter', adapter)
       const serialized = adapter.serializeData(rawData);
       expect(serialized).to.be.an('array');
       done();
@@ -159,11 +157,30 @@ describe('Storage/models/payment-processor-adapters/stripeAdapter', function() {
 
   });
 
-  // describe('#delete', function() {
-  //
-  //   it('should delete stripe customer', function(done) {
-  //
-  //   });
-  // });
+  describe('#delete', function() {
+
+    it('should delete stripe customer', function(done) {
+      const processor = user.getPaymentProcessor(name);
+      const customerId = processor.rawData[0].customer.id;
+      adapter
+        .delete(customerId)
+        .then((result) => {
+          expect(result).to.equal('User successfully deleted');
+          done();
+        });
+    });
+
+    it('should fail with invalid customer id', function(done) {
+      const processor = user.getPaymentProcessor(name);
+      const customerId = 'not-a-real-customer-id-123';
+      adapter
+        .delete(customerId)
+        .catch((err) => {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.equal(`No such customer: ${customerId}`);
+          done();
+        });
+    });
+  });
 
 });
