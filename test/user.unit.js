@@ -351,7 +351,7 @@ describe('Storage/models/User', function() {
           done();
         });
       });
-    })
+    });
 
     describe('#addPaymentProcessor', function() {
 
