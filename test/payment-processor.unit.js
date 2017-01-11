@@ -10,6 +10,8 @@ const UserSchema = require('../lib/models/user');
 const PaymentProcessorSchema = require('../lib/models/payment-processor');
 const constants = require('../lib/constants');
 const PAYMENT_PROCESSORS = constants.PAYMENT_PROCESSORS;
+const paymentProcessorAdapters = require('./../lib/models/payment-processor-adapters');
+const Stripe = require('./../lib/vendor/stripe');
 
 var PaymentProcessor;
 var User;
@@ -40,16 +42,65 @@ function sha256(i) {
 
 describe('Storage/models/payment-processor', function() {
 
-  describe('#toObject', function() {
+  // create User doc to test with
+  let user;
+  let stripeToken;
+  let stripeProcessor;
+  const d = new Date();
+  const name = 'stripe';
 
-    it('should modify object returned', function(done) {
-      User.create('user@domain.tld', sha256('password'), function(err, user) {
+  before(function(done) {
+    User.create('user@paymentprocessor.tld', sha256('pass'),
+    function(err, newUser) {
+      if (err) {
+        return done(err);
+      }
+      user = newUser;
+
+      // Stub out test token for Stripe stuff
+      const cardInfo = {
+        exp_month: d.getMonth() + 1,
+        exp_year: d.getFullYear(),
+        number: 4242424242424242
+      };
+      Stripe.tokens.create({ card: cardInfo }, function(err, token) {
         if (err) {
           return done(err);
         }
-        console.log('user', user)
+        stripeToken = token.id;
+        user
+          .addPaymentProcessor(name, stripeToken)
+          .then((result) => {
+            stripeProcessor = result;
+            done();
+          });
+      });
+    });
+  });
+
+  describe('#virtuals', function() {
+
+    it('should return correct billing date', function(done) {
+      User.findOne({ _id: user.email }, function(err, res) {
+        if (err) {
+          return done(err);
+        }
+        console.log('res', res.defaultPaymentProcessor.paymentMethods);
+        console.log('process', stripeProcessor.rawData[0].customer.sources.data);
+
+        expect(res.defaultPaymentProcessor.billingDate)
+          .to.equal(d.getDate());
         done();
-      })
+      });
+    });
+
+    it('should return correct paymentMethods', function(done) {
+      User.findOne({ _id: user.email }, function(err, res) {
+        if (err) {
+          return done(err);
+        }
+
+      });
     });
 
   });
