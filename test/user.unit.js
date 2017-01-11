@@ -372,18 +372,16 @@ describe('Storage/models/User', function() {
           })
       });
 
-      it('should update existing processor if one exists', function(done) {
-        user
-          .addPaymentProcessor(name, stripeToken)
-          .then((result) => {
-            console.log('result', result);
-            done();
-          })
-          .catch((err) => {
-            if (err) {
-              return done(err);
-            }
-          })
+      it('should fail if processor already exists', function(done) {
+        try {
+          user.addPaymentProcessor(name, stripeToken);
+        } catch(err) {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.equal(
+            `${name} PaymentProcessor already exists`
+          );
+          done();
+        }
       });
 
     });
