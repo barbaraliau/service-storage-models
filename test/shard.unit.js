@@ -130,6 +130,5 @@ describe('Storage/models/Shard', function() {
 
     });
 
-  });
 
 });
