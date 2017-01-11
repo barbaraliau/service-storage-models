@@ -181,6 +181,17 @@ describe('Storage/models/payment-processor-adapters/stripeAdapter', function() {
           done();
         });
     });
+
+    it('should fail with null customer id passed in', function(done) {
+      const processor = user.getPaymentProcessor(name);
+      const customerId = null;
+      adapter
+        .delete(customerId)
+        .catch((err) => {
+          expect(err).to.be.an.instanceOf(Error);
+          done();
+        });
+    });
   });
 
 });
