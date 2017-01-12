@@ -125,4 +125,92 @@ describe('Storage/models/payment-processor', function() {
 
   });
 
+  describe('PaymentProcessors', function() {
+
+    let user;
+    let stripeToken;
+    const name = 'stripe';
+    const d = new Date();
+
+    before(function(done) {
+      User.create('user@paymentprocessor2.tld', sha256('pass'), function(err,
+      newUser) {
+        if (err) {
+          return done(err);
+        }
+        user = newUser;
+
+        // Stub out test token for Stripe stuff
+        const cardInfo = {
+          exp_month: d.getMonth() + 1,
+          exp_year: d.getFullYear(),
+          number: 4242424242424242
+        };
+        Stripe.tokens.create({ card: cardInfo }, function(err, token) {
+          if (err) {
+            return done(err);
+          }
+          stripeToken = token.id;
+          done();
+        });
+      });
+    });
+
+    describe('#addPaymentProcessor', function() {
+
+      it('should register new processor if none exists', function(done) {
+        user
+          .addPaymentProcessor(name, stripeToken)
+          .then((result) => {
+            expect(result.name).to.equal(name);
+            expect(result.rawData).to.be.an('array');
+            expect(result.default).to.be.true;
+            expect(result.rawData[0].billingDate).to.equal(d.getDate());
+            done();
+          })
+          .catch((err) => done(err));
+      });
+
+      it('should fail if processor already exists', function(done) {
+        try {
+          user.addPaymentProcessor(name, stripeToken);
+        } catch(err) {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.equal(
+            `${name} PaymentProcessor already exists`
+          );
+          done();
+        }
+      });
+
+      it('should fail if processor is invalid', function(done) {
+        try {
+          user.addPaymentProcessor('invalid')
+        } catch(err) {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.equal(`invalid PaymentProcessor is invalid`);
+          done();
+        }
+      });
+
+    });
+
+    describe('#getPaymentProcessor', function() {
+
+      it('should return payment processor if it exists', function(done) {
+        const processor = user.getPaymentProcessor(name);
+        expect(processor.name).to.equal(name);
+        done();
+      });
+
+      it('should return ! if payment processor does not exist', function(done) {
+        const processor = user.getPaymentProcessor('braintree');
+        expect(processor).to.be.undefined;
+        done();
+      });
+
+    });
+
+  });
+
 });
