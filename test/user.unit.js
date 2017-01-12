@@ -330,7 +330,7 @@ describe('Storage/models/User', function() {
     const d = new Date();
 
     before(function(done) {
-      User.create('user@paymentprocessor.tld', sha256('pass'), function(err,
+      User.create('user@paymentprocessor2.tld', sha256('pass'), function(err,
       newUser) {
         if (err) {
           return done(err);
@@ -365,11 +365,7 @@ describe('Storage/models/User', function() {
             expect(result.rawData[0].billingDate).to.equal(d.getDate());
             done();
           })
-          .catch((err) => {
-            if (err) {
-              return done(err);
-            }
-          })
+          .catch((err) => done(err));
       });
 
       it('should fail if processor already exists', function(done) {
@@ -380,6 +376,16 @@ describe('Storage/models/User', function() {
           expect(err.message).to.equal(
             `${name} PaymentProcessor already exists`
           );
+          done();
+        }
+      });
+
+      it('should fail if processor is invalid', function(done) {
+        try {
+          user.addPaymentProcessor('invalid')
+        } catch(err) {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.equal(`invalid PaymentProcessor is invalid`);
           done();
         }
       });
