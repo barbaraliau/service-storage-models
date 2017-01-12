@@ -48,6 +48,11 @@ describe('Storage/models/payment-processor', function() {
   let stripeProcessor;
   const d = new Date();
   const name = 'stripe';
+  const cardInfo = {
+    exp_month: d.getMonth() + 1,
+    exp_year: d.getFullYear(),
+    number: 4242424242424242
+  };
 
   before(function(done) {
     User.create('user@paymentprocessor.tld', sha256('pass'),
@@ -58,11 +63,6 @@ describe('Storage/models/payment-processor', function() {
       user = newUser;
 
       // Stub out test token for Stripe stuff
-      const cardInfo = {
-        exp_month: d.getMonth() + 1,
-        exp_year: d.getFullYear(),
-        number: 4242424242424242
-      };
       Stripe.tokens.create({ card: cardInfo }, function(err, token) {
         if (err) {
           return done(err);
@@ -85,11 +85,7 @@ describe('Storage/models/payment-processor', function() {
         if (err) {
           return done(err);
         }
-        console.log('res', res.defaultPaymentProcessor.paymentMethods);
-        console.log('process', stripeProcessor.rawData[0].customer.sources.data);
-
-        expect(res.defaultPaymentProcessor.billingDate)
-          .to.equal(d.getDate());
+        expect(res.defaultPaymentProcessor.billingDate).to.equal(d.getDate());
         done();
       });
     });
@@ -99,7 +95,31 @@ describe('Storage/models/payment-processor', function() {
         if (err) {
           return done(err);
         }
+        const converted = cardInfo.number.toString().split('');
+        const last4 = converted
+          .slice(converted.length - 4, converted.length)
+          .join('');
 
+        const paymentMethod = res.defaultPaymentProcessor.paymentMethods[0];
+        expect(paymentMethod.last4).to.equal(last4);
+        expect(paymentMethod.exp_year).to.equal(cardInfo.exp_year);
+        expect(paymentMethod.exp_month).to.equal(cardInfo.exp_month);
+        done();
+      });
+    });
+
+    it('should return defaultPaymentMethod', function(done) {
+      User.findOne({ _id: user.email }, function(err, res) {
+        if (err) {
+          return done(err);
+        }
+        const converted = cardInfo.number.toString().split('');
+        const last4 = converted
+          .slice(converted.length - 4, converted.length)
+          .join('');
+        const paymentMethod = res.defaultPaymentProcessor.defaultPaymentMethod;
+        expect(paymentMethod.lastFour).to.equal(last4);
+        done();
       });
     });
 
