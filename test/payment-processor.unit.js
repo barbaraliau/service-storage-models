@@ -44,8 +44,6 @@ describe('Storage/models/payment-processor', function() {
 
   // create User doc to test with
   let user;
-  let stripeToken;
-  let stripeProcessor;
   const d = new Date();
   const name = 'stripe';
   const cardInfo = {
@@ -55,53 +53,91 @@ describe('Storage/models/payment-processor', function() {
   };
 
   before(function(done) {
-    User.create('user@paymentprocessor.tld', sha256('pass'),
-    function(err, newUser) {
+    User.create('payment@domain.tld', sha256('pass'), function(err, newUser) {
       if (err) {
         return done(err);
       }
       user = newUser;
-
-      // Stub out test token for Stripe stuff
-      Stripe.tokens.create({ card: cardInfo }, function(err, token) {
-        if (err) {
-          return done(err);
-        }
-        stripeToken = token.id;
-        user
-          .addPaymentProcessor(name, stripeToken)
-          .then((result) => {
-            stripeProcessor = result;
-            done();
-          });
-      });
+      done();
     });
   });
 
   describe('#create', function() {
 
     it('should create a new PaymentProcessor', function(done) {
-
+      // Stub out test token for Stripe stuff
+      Stripe.tokens.create({ card: cardInfo }, function(err, token) {
+        if (err) {
+          return done(err);
+        }
+        PaymentProcessor
+          .create({ name , user, token: token.id })
+          .then((result) => {
+            expect(result.user).to.equal(user.email);
+            expect(result.default).to.equal(name);
+            expect(result.stripe.billingDate).to.equal(d.getDate());
+            expect(result.stripe.customer.email).to.equal(user.email);
+            done();
+          })
+          .catch((err) => {
+            if (err) {
+              return done(err);
+            }
+          })
+        });
     });
 
     it('should fail if no email is passed in', function(done) {
-
+      PaymentProcessor
+        .create({ name , user: {} })
+        .catch((err) => {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.statusCode).to.equal(400);
+          expect(err.message).to.equal('Must pass in valid email');
+          done();
+        })
     });
 
     it('should fail with invalid processor name', function(done) {
-
+      const invalidName = 'invalidProcessorName';
+      PaymentProcessor
+        .create({ name: invalidName, user })
+        .catch((err) => {
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.statusCode).to.equal(400);
+          expect(err.message).to.equal(
+            `${invalidName} payment processor is not supported / invalid name`
+          );
+          done();
+        })
     });
 
     it('should fail if processor already exists', function(done) {
-
-    });
-
-    it('should register specified processor', function(done) {
-
+      User.create('payMe@domain.tld', sha256('pass'), function(err, user) {
+        if (err) {
+          return done(err);
+        }
+        PaymentProcessor
+          .create({ name, user })
+          .then(() => {
+            PaymentProcessor
+              .create({ name, user })
+              .then()
+              .catch((err) => {
+                expect(err).to.be.an.instanceOf(Error);
+                expect(err.code).to.equal(400);
+                expect(err.message).to.equal(
+                  'Cannot create stripe processor. Processor already exists'
+                )
+                done();
+              })
+          })
+        })
     });
 
   });
 
+});
   // describe('#get', function() {
   //
   // });
