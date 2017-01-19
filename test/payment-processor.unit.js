@@ -138,9 +138,10 @@ describe('Storage/models/payment-processor', function() {
   });
 
 });
-  // describe('#get', function() {
-  //
-  // });
+
+describe('#get', function() {
+
+});
   //
   // describe('#virtuals', function() {
   //
