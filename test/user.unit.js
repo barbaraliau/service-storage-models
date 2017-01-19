@@ -62,7 +62,7 @@ describe('Storage/models/User', function() {
     it('should not create a invalid email (no tld)', function(done) {
       User.create('wrong@domain', sha256('password'), function(err) {
         expect(err).to.be.instanceOf(Error);
-        expect(err.message).to.equal('User validation failed');
+        expect(err.message).to.equal('User validation failed - invalid email');
         done();
       });
     });
@@ -79,17 +79,6 @@ describe('Storage/models/User', function() {
     it('should support modern TLDs', function(done) {
       User.create('user@domain.lawyer', sha256('password'), function(err) {
         expect(err).to.not.be.an.instanceOf(Error);
-        done();
-      });
-    });
-
-    it('should create user account with virtuals', function(done) {
-      User.create('test@test.com', sha256('pass'), function(err, user) {
-        if (err) {
-          return done(err);
-        }
-        expect(user.defaultPaymentProcessor).to.be.null;
-        expect(user.email).to.equal(user.id);
         done();
       });
     });
@@ -135,7 +124,10 @@ describe('Storage/models/User', function() {
       'up7MohQrlzLEpUtnQMAvsY8HroBza2ifJotuyz2FD1y1X7paGw40eGxj4TIhM5pCTl' +
       'gxu6XPRNBRu8qqkv6LNgibPPWK2Il20GKilCFSRTraN67cFJWsCfCOfzZjymS6YPze' +
       'DPXZugTGl4vMPwAMI3gi7TbwLPcwV64Do6R2Qz3H6My8yWKwepls7J8DK8FisEkIW1N' +
-      'chTop0NqWADTlguHuEi230npemRbNwWQpr0ErcWaRRYZZrIzQ2kwfCiA.com';
+      'up7MohQrlzLEpUtnQMAvsY8HroBza2ifJotuyz2FD1y1X7paGw40eGxj4TIhM5pCTl' +
+      'gxu6XPRNBRu8qqkv6LNgibPPWK2Il20GKilCFSRTraN67cFJWsCfCOfzZjymS6YPze' +
+      'DPXZugTGl4vMPwAMI3gi7TbwLPcwV64Do6R2Qz3H6My8yWKwepls7J8DK8FisEkIW1N' +
+      'chTop0NqWADTlguHuEi230npemRbNwWQpr0ErcWaRfeasdfRYZZrIzQ2kwfCiA.com';
 
       User.create(longEmail, sha256('password'), function(err) {
         expect(err).to.be.instanceOf(Error);
