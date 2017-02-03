@@ -56,7 +56,7 @@ describe('Storage/models/User', function() {
     it('should not create a invalid email (no tld)', function(done) {
       User.create('wrong@domain', sha256('password'), function(err) {
         expect(err).to.be.instanceOf(Error);
-        expect(err.message).to.equal('User validation failed');
+        expect(err.message).to.equal('Invalid email');
         done();
       });
     });
@@ -109,7 +109,7 @@ describe('Storage/models/User', function() {
         sha256('password'),
         function(err) {
           expect(err).to.be.instanceOf(Error);
-          expect(err.message).to.equal('User validation failed');
+          expect(err.message).to.equal('Invalid email');
           done();
         });
     });
@@ -135,7 +135,7 @@ describe('Storage/models/User', function() {
 
       User.create(longEmail, sha256('password'), function(err) {
         expect(err).to.be.instanceOf(Error);
-        expect(err.message).to.equal('User validation failed');
+        expect(err.message).to.equal('Invalid email');
         done();
       });
     });
